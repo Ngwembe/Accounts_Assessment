@@ -5,7 +5,11 @@
 
     public AccountStore(ITransactionStore transactionStore)
     {
-        _accounts = new List<Account>().AsQueryable();
+        _accounts = new List<Account>()
+        { 
+            new Account() { Balance = 8000, TransactionMarker = "Genesis", AccountNr = 100001 } 
+        }.AsQueryable();
+               
         _transactionStore = transactionStore;
     }
 
@@ -30,7 +34,8 @@
     /// <exception cref="NotImplementedException"></exception>
     public async Task<(decimal balance, string txMarker)> GetBalance(long accountNr)
     {
-        var account = await _accounts.Where(acc => acc.AccountNr == accountNr).ToAsyncEnumerable().FirstAsync();
+        var account = await _accounts.Where(acc => acc.AccountNr == accountNr)
+                                     .ToAsyncEnumerable().FirstAsync();
 
         if (account == null)
             throw new Exception($"Account with account number: {accountNr} not found.");
