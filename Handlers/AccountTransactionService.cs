@@ -13,16 +13,17 @@
     {
         try
         {
-            await _accountStore.GetBalance(accountNr).ContinueWith(async result =>
-            {
-                var balance = result.Result.balance;
-                var txMarker = result.Result.txMarker;
+            (decimal balance, string txMarker) accountBalance = await _accountStore.GetBalance(accountNr);
 
-                long uniqueId = await _transactionStore.Add(referenceId, accountNr, amount, txMarker);
+            var balance = accountBalance.balance;
+            var txMarker = accountBalance.txMarker;
 
-                //  Assuming the caller already set 'balance' as either positive for a deposit or negative for a withdrawal
-                await _accountStore.SetBalance(accountNr, balance, txMarker);
-            });
+            long uniqueId = await _transactionStore.Add(referenceId, accountNr, amount, txMarker);
+
+            balance += amount;
+
+            //  Assuming the caller already set 'balance' as either positive for a deposit or negative for a withdrawal
+            await _accountStore.SetBalance(accountNr, balance, txMarker);
         }
         catch (Exception ex)
         {
