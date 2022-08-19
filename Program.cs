@@ -3,6 +3,12 @@ using System.Linq;
 using System.Collections;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Configuration;
 
 namespace Accounts_Assessment
 {
@@ -10,7 +16,21 @@ namespace Accounts_Assessment
     {
         static void Main(string[] args)
         {
-            Console.WriteLine("Hello, World!");
+            WebHost.CreateDefaultBuilder()
+                .UseKestrel()
+                .ConfigureServices(services =>
+                {
+                    services.AddScoped<IAccountStore, AccountStore>();
+                    services.AddScoped<ITransactionStore, TransactionStore>();
+                    services.AddScoped<IAccountTransactionService, AccountTransactionService>();
+                    services.AddMvc();
+                })
+                .Configure(config =>
+                {
+                    config.UseMvc();
+                })
+                .Build()
+                .Run();
         }
     }
 }
