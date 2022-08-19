@@ -45,23 +45,16 @@
             Task? setRecipientBalance = null;
             decimal senderBalance = 0;
             decimal recipientBalance = 0;
-            var senderAccountRetrievalTask = await _accountStore.GetBalance(accountNrFrom).ContinueWith(senderAccount => {
-                if (senderAccount == null)
-                    throw new ArgumentException("The sender's account was not found.");
+            
+            var senderAccount = await _accountStore.GetBalance(accountNrFrom);
 
-                senderBalance = senderAccount.Result.balance;
-                if (senderBalance < amount)
-                    throw new InvalidOperationException($"The current balance is lower than the amount to transfer.\nCurrent Balance: R{senderBalance}\nAmount to transfer: R{amount}");
-                return Task.CompletedTask;
-            }, new CancellationToken(true));
+            senderBalance = senderAccount.balance;
+            if (senderBalance < amount)
+                throw new InvalidOperationException($"The current balance is lower than the amount to transfer.\nCurrent Balance: R{senderBalance}\nAmount to transfer: R{amount}");
 
-            var recipientAccountRetrievalTask = await _accountStore.GetBalance(accountNrTo).ContinueWith(recipientAccount => {
-                if (recipientAccount == null)
-                    throw new ArgumentException("The recipient account was not found.");
+            var recipientAccount = await _accountStore.GetBalance(accountNrTo);
 
-                recipientBalance = recipientAccount.Result.balance;
-                return Task.CompletedTask;
-            }, new CancellationToken(true));
+            recipientBalance = recipientAccount.balance;
 
             if (senderBalance > 0)
             {
@@ -70,7 +63,7 @@
             }
 
             if (setRecipientBalance != null && setSenderBalance != null)
-                Task.WaitAll(new Task[] { senderAccountRetrievalTask, recipientAccountRetrievalTask, setRecipientBalance, setSenderBalance });
+                Task.WaitAll(new Task[] { setRecipientBalance, setSenderBalance });
 
             semaphore.Release();
         }
